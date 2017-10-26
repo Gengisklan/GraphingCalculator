@@ -28,13 +28,14 @@ public class ExpressionCalculator implements ActionListener
 	JPanel centerPanel              = new JPanel(); 
 	JTextField enterExpressionField = new JTextField("");  
 	JTextField errorMessagesField   = new JTextField(); 
-	JButton clearButton       		= new JButton("Clear Entry Area"); 
+	JButton clearButton       	= new JButton("Clear Entry Area"); 
 	JButton recallButton            = new JButton("Recall"); 
 	JLabel forXLabel                = new JLabel ("For X ="); 
 	JTextField valueForXField       = new JTextField(); 
 	JTextArea logArea               = new JTextArea(); 
 	JScrollPane logAreaScrollPane   = new JScrollPane(logArea); 
-	//Gotta add some more stuff here 
+	JLabel xIncrementsLabel         = new JLabel("with X increments of:"); 
+	JTextField xIncrementsField      = new JTextField(); 
 	
 	//Other variables
 	String lastMessage; 
@@ -53,9 +54,11 @@ public class ExpressionCalculator implements ActionListener
 			northPanel.add(errorMessagesField);
 			calculatorWindow.getContentPane().add(northPanel, "North");
 			
-			southPanel.setLayout(new GridLayout(1,3)); //clearButton and valueForXField
+			southPanel.setLayout(new GridLayout(1,5)); //clearButton and valueForXField
 			southPanel.add(forXLabel); 
 			southPanel.add(valueForXField);
+			southPanel.add(xIncrementsLabel); 
+			southPanel.add(xIncrementsField); 
 			southPanel.add(clearButton);
 			calculatorWindow.getContentPane().add(southPanel, "South");
 			
@@ -73,11 +76,13 @@ public class ExpressionCalculator implements ActionListener
 			errorMessagesField.setEditable(false);
 			logArea.setFont(new Font("default", Font.BOLD,20));
 			logArea.setEditable(false);
+			xIncrementsField.setEditable(false); 
 			
-			//Activate the buttons
+			//Activate the buttons/fields
 			clearButton.addActionListener(this); 
 			enterExpressionField.addActionListener(this);
 			valueForXField.addActionListener(this);
+			xIncrementsField.addActionListener(this); 
 			recallButton.addActionListener(this); 
 			////////////////////////////////////////////////////////////////////////////////////////////////
 			//
