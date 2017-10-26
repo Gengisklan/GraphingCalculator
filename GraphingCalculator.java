@@ -34,6 +34,7 @@ public class ExpressionCalculator implements ActionListener
 	JTextField valueForXField       = new JTextField(); 
 	JTextArea logArea               = new JTextArea(); 
 	JScrollPane logAreaScrollPane   = new JScrollPane(logArea); 
+	//Gotta add some more stuff here 
 	
 	//Other variables
 	String lastMessage; 
