@@ -35,7 +35,7 @@ public class ExpressionCalculator implements ActionListener
 	JTextArea logArea               = new JTextArea(); 
 	JScrollPane logAreaScrollPane   = new JScrollPane(logArea); 
 	JLabel xIncrementsLabel         = new JLabel("with X increments of:"); 
-	JTextField xIncrementsField      = new JTextField(); 
+	JTextField xIncrementsField     = new JTextField(); 
 	
 	//Other variables
 	String lastMessage; 
@@ -76,7 +76,7 @@ public class ExpressionCalculator implements ActionListener
 			errorMessagesField.setEditable(false);
 			logArea.setFont(new Font("default", Font.BOLD,20));
 			logArea.setEditable(false);
-			xIncrementsField.setEditable(false); 
+			xIncrementsField.setEditable(true); 
 			
 			//Activate the buttons/fields
 			clearButton.addActionListener(this); 
