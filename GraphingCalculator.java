@@ -2,11 +2,10 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -29,8 +28,6 @@ public class GraphingCalculator implements ActionListener
 	private JPanel northPanel               = new JPanel(); 
 	private JPanel southPanel               = new JPanel(); 
 	private JPanel centerPanel              = new JPanel(); 
-	private JPanel plotPanel 				= new JPanel();
-	
 	
 	private JTextField enterExpressionField = new JTextField("");  
 	private JTextField xIncrementField      = new JTextField("");
@@ -189,7 +186,7 @@ public class GraphingCalculator implements ActionListener
 		char operator = ' ';
 		boolean isError = false;
 		int i;
-		String illegalCharacters = "abcdefghjklmnoqrstuvwyz!@#$%&_,.<>?`~|[] {}'\\";
+		String illegalCharacters = "abcdefghjklmnoqstuvwyz!@#$%&_,<>?`~|[] {}'\\";
 		for (i = 0; i < expression.length(); i++) {
 			if (illegalCharacters.contains(String.valueOf(expression.charAt(i)))){
 				errorMessagesField.setText("Illegal character: " + String.valueOf(expression.charAt(i)));
@@ -648,31 +645,50 @@ public class GraphingCalculator implements ActionListener
 		double startingValue = Double.parseDouble(valueForXField.getText());
 		double incrementValue = Double.parseDouble(xIncrementField.getText());
 		
+		
 		System.out.println("\nStarting value: " + startingValue);
 		System.out.println("Increment by: " + incrementValue);
 		System.out.println("Equation: " + expression);
 		
-		//graphWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		JFrame graphWindow = new JFrame("Plot of the Expression: " + expression);
-		
-		graphWindow.setSize(1000,1000); // width, height (in "pixels"!)
-		graphWindow.setVisible(true); // show it!
-		graphWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//calculate x point values
-   	 x[0] = startingValue;
-   	 for( int i=1 ; i<11 ; i++)
-   	 {
-   		 x[i] = x[i-1] + incrementValue;
-   	 }
-   	 //calculate y point values
-   	 for( int i=0 ; i<11 ; i++)
-   	 {
-   		 String xValueString = Double.toString(x[i]);
-   		 String yValueCalc = expression.replaceAll("x",xValueString);
-   		 y[i] = Double.parseDouble(calculate(yValueCalc));
-   	 }
-   	 System.out.println("x point values= " + Arrays.toString(x) + "\n");
-   	 System.out.println("y point values= " + Arrays.toString(y) + "\n");
+	   	 x[0] = startingValue;
+	   	 for( int i=1 ; i<11 ; i++){
+	   		 x[i] = x[i-1] + incrementValue;
+	   	 }
+	   	 //calculate y point values
+	   	 for( int i=0 ; i<11 ; i++){
+	   		 String xValueString = Double.toString(x[i]);
+	   		 String yValueCalc = expression.replaceAll("x",xValueString);
+	   		 y[i] = Double.parseDouble(calculate(yValueCalc));
+	   	 }
+	   	 System.out.println("\nx point values= " + Arrays.toString(x) + "\n");
+	   	 System.out.println("y point values= " + Arrays.toString(y) + "\n");
+	   	 System.out.println("Sending these arrays to drawPlot method.");
+	   	 
+	   	 drawPlot(expression, x, y);
+	   	 return;
+	}
+
+	private void drawPlot(String expression, double[] x, double[] y) {
+		JFrame graphWindow = new JFrame("Plot of the Expression: " + expression);
+		JPanel plotPanel  = new JPanel();
+		Graphics g;
+		
+		graphWindow.setSize(800,600); // width, height (in "pixels"!)
+		graphWindow.getContentPane().add(plotPanel, "Center");
+		graphWindow.setVisible(true); // show it!
+		
+		plotPanel.setBackground(Color.white);
+		
+		g = plotPanel.getGraphics();
+		g.setColor(Color.black);
+		g.setFont(new Font("default", Font.BOLD, 50));
+		g.drawString("Hey!" ,100,100);
+	    g.fillRect(100, 100, 50, 50);//x,y,width,height  
+		
+	    System.out.println("\nplotPanel width =  " + plotPanel.getWidth());
+	    System.out.println("\nplotPanel height =  " + plotPanel.getHeight());
+	    
 	}
 	
 	private void recallLast() 
