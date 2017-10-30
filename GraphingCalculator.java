@@ -1,11 +1,13 @@
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import javax.swing.JButton;
@@ -18,22 +20,34 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 
 
-public class ExpressionCalculator implements ActionListener 
+public class GraphingCalculator implements ActionListener 
 {	
 	//GUI objects
 	
-	JFrame calculatorWindow         = new JFrame(); 
-	JPanel northPanel               = new JPanel(); 
-	JPanel southPanel               = new JPanel(); 
-	JPanel centerPanel              = new JPanel(); 
-	JTextField enterExpressionField = new JTextField("");  
-	JTextField errorMessagesField   = new JTextField(); 
-	JButton clearButton       		= new JButton("Clear Entry Area"); 
-	JButton recallButton            = new JButton("Recall"); 
-	JLabel forXLabel                = new JLabel ("For X ="); 
-	JTextField valueForXField       = new JTextField(); 
-	JTextArea logArea               = new JTextArea(); 
-	JScrollPane logAreaScrollPane   = new JScrollPane(logArea); 
+	private JFrame calculatorWindow         = new JFrame("Graphing Calculator"); 
+	
+	private JPanel northPanel               = new JPanel(); 
+	private JPanel southPanel               = new JPanel(); 
+	private JPanel centerPanel              = new JPanel(); 
+	private JPanel plotPanel 				= new JPanel();
+	
+	
+	private JTextField enterExpressionField = new JTextField("");  
+	private JTextField xIncrementField      = new JTextField("");
+	private JTextField errorMessagesField   = new JTextField("Error messages will be displayed here."); 
+	private JTextField valueForXField       = new JTextField(""); 
+	
+	private JTextArea logArea               = new JTextArea("Press the enter key to solve expressions \nClick \"Graph!\" to plot them."); 
+	
+	private JButton clearButton       		= new JButton("Clear Text Areas"); 
+	private JButton recallButton            = new JButton("Recall last expression");
+	private JButton graphButton             = new JButton("Graph!");
+	
+	private JLabel expressionPrompt         = new JLabel ("Type expression here  ===============================>"); 
+	private JLabel forXLabel                = new JLabel ("       x = "); 
+	private JLabel incrementLabel           = new JLabel ("Step value for x variable ="); 
+	
+	private JScrollPane logAreaScrollPane   = new JScrollPane(logArea); 
 	
 	//Other variables
 	String lastMessage; 
@@ -41,21 +55,27 @@ public class ExpressionCalculator implements ActionListener
 	boolean errorDetected2; 
 	
 	// Constructor
-	public ExpressionCalculator() throws Exception{
+	public GraphingCalculator() throws Exception{
+			
+		    
 			System.out.print("Judd Heater and Joe Collins Lab 9.");
-			//Build the GUI
+			//Build the calculator (not the graph) GUI
 			UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
 			calculatorWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			northPanel.setLayout(new GridLayout(1,3)); //enterExpressionField and errorMessagesField
-			northPanel.add(enterExpressionField); 
-			northPanel.add(recallButton); 
+			northPanel.setLayout(new GridLayout(2,1)); //enterExpressionField and errorMessagesField 
 			northPanel.add(errorMessagesField);
+			northPanel.add(recallButton); 
+			northPanel.add(expressionPrompt); 
+			northPanel.add(enterExpressionField);
 			calculatorWindow.getContentPane().add(northPanel, "North");
 			
-			southPanel.setLayout(new GridLayout(1,3)); //clearButton and valueForXField
+			southPanel.setLayout(new GridLayout(0,6)); //clearButton and valueForXField
 			southPanel.add(forXLabel); 
 			southPanel.add(valueForXField);
+			southPanel.add(incrementLabel);
+			southPanel.add(xIncrementField);
 			southPanel.add(clearButton);
+			southPanel.add(graphButton);
 			calculatorWindow.getContentPane().add(southPanel, "South");
 			
 			centerPanel.setLayout(new GridLayout(1,1)); 
@@ -67,17 +87,20 @@ public class ExpressionCalculator implements ActionListener
 			calculatorWindow.setVisible(true); // show it!
 			
 			//Set attributes for GUI objects
-			errorMessagesField.setFont(new Font("default",Font.BOLD,20)); 
+			errorMessagesField.setFont(new Font("default",Font.BOLD,12)); 
 			errorMessagesField.setBackground(Color.pink);
 			errorMessagesField.setEditable(false);
-			logArea.setFont(new Font("default", Font.BOLD,20));
+			logArea.setFont(new Font("default", Font.BOLD,18));
 			logArea.setEditable(false);
+			
+			
 			
 			//Activate the buttons
 			clearButton.addActionListener(this); 
 			enterExpressionField.addActionListener(this);
 			valueForXField.addActionListener(this);
 			recallButton.addActionListener(this); 
+			graphButton.addActionListener(this); 
 			////////////////////////////////////////////////////////////////////////////////////////////////
 			//
 			// Instruction to user
@@ -90,7 +113,7 @@ public class ExpressionCalculator implements ActionListener
 	public static void main(String[] args) throws Exception {
 		try 
 		{
-			ExpressionCalculator calculatorgui = new ExpressionCalculator(); //load the program object 
+			GraphingCalculator calculatorgui = new GraphingCalculator(); //load the program object 
 		} catch (Exception e) 
 		{
 			System.out.println("Could not load calculator!" + e);
@@ -99,7 +122,7 @@ public class ExpressionCalculator implements ActionListener
 	}  
  	
 	// checks for parentheses errors
-	private int checkParenthesesErrors(String expression) {
+	private int checkParenthesesErrors(String expression, int whoIsCalling) {
 		String testString = ")r^*/+-";
 		int numOfOpenParentheses = 0;
 		int numOfCloseParentheses = 0;
@@ -161,7 +184,7 @@ public class ExpressionCalculator implements ActionListener
 	}
 	
 	// handles the rest of the errors
-	private int checkForOtherErrors(String expression) {
+	private int checkForOtherErrors(String expression, int whoIsCalling) {
 		// find the operator
 		char operator = ' ';
 		boolean isError = false;
@@ -186,11 +209,13 @@ public class ExpressionCalculator implements ActionListener
 				break;
 			   }
 		 }
-	     if (i == expression.length()){
-	    	System.out.println("Entered expression does not contain an operator.");
-	    	errorMessagesField.setText("Entered expression does not contain an operator.");
-	    	return 1;
-	     }
+		 if(whoIsCalling == 0){
+		     if (i == expression.length()){
+		    	System.out.println("Entered expression does not contain an operator.");
+		    	errorMessagesField.setText("Entered expression does not contain an operator.");
+		    	return 1;
+		     }
+		 }
 	     if (i == expression.length()-1){
 	 	    System.out.println("Expression should not end with an operator.");
 	 	   errorMessagesField.setText("Expression should not end with an operator.");
@@ -578,9 +603,77 @@ public class ExpressionCalculator implements ActionListener
 		if(ae.getSource() == enterExpressionField) enterHasBeenPressed(); 
 		if(ae.getSource() == valueForXField) enterHasBeenPressed(); 
 		if(ae.getSource() == recallButton) recallLast(); 
-		 
+		if(ae.getSource() == graphButton) graphButtonMethod(); 
 		
 	  }
+	
+	private void graphButtonMethod() {
+		double xStep = -1;
+		String newLine = System.lineSeparator();
+		String expression = enterExpressionField.getText().trim();
+		expression = expression.replaceAll(" ", "");
+		lastMessage = enterExpressionField.getText(); //last thing entered in log area 
+		if (!isXThere()) {
+			errorMessagesField.setText("There must be an expression with 'x' in it");
+			return;
+			}
+		if(!valueInTheXField()) {
+			errorMessagesField.setText("Specify a starting value for x");
+			return;
+		}
+		if (xIncrementField.getText().trim().length() == 0) {
+			errorMessagesField.setText("Please specify a step value for x");
+			return;
+		}
+		xStep =  Double.parseDouble(xIncrementField.getText());
+		if (xStep<0) {
+			errorMessagesField.setText("Step value for x must be a positive number");
+			return;
+		}
+		if (isXThere()&&valueInTheXField()&&(xIncrementField.getText().trim().length() != 0)) {
+			if (checkParenthesesErrors(expression, 1) == 1)
+				return;
+			if (checkForOtherErrors(expression, 1) == 1)
+				return;
+			errorMessagesField.setText("");
+			logArea.append(newLine + "Graphing \"" + expression + "\"..."); 
+			graphTheExpression(expression);
+		}
+	}
+	
+	private void graphTheExpression(String expression) {
+		
+		double[] x = new double[11];
+		double[] y = new double[11];
+		double startingValue = Double.parseDouble(valueForXField.getText());
+		double incrementValue = Double.parseDouble(xIncrementField.getText());
+		
+		System.out.println("\nStarting value: " + startingValue);
+		System.out.println("Increment by: " + incrementValue);
+		System.out.println("Equation: " + expression);
+		
+		//graphWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		JFrame graphWindow = new JFrame("Plot of the Expression: " + expression);
+		
+		graphWindow.setSize(1000,1000); // width, height (in "pixels"!)
+		graphWindow.setVisible(true); // show it!
+		graphWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//calculate x point values
+   	 x[0] = startingValue;
+   	 for( int i=1 ; i<11 ; i++)
+   	 {
+   		 x[i] = x[i-1] + incrementValue;
+   	 }
+   	 //calculate y point values
+   	 for( int i=0 ; i<11 ; i++)
+   	 {
+   		 String xValueString = Double.toString(x[i]);
+   		 String yValueCalc = expression.replaceAll("x",xValueString);
+   		 y[i] = Double.parseDouble(calculate(yValueCalc));
+   	 }
+   	 System.out.println("x point values= " + Arrays.toString(x) + "\n");
+   	 System.out.println("y point values= " + Arrays.toString(y) + "\n");
+	}
 	
 	private void recallLast() 
 	{
@@ -590,15 +683,16 @@ public class ExpressionCalculator implements ActionListener
 
 	private void clearAreas() //clears all areas except the log area 
 	{
-		valueForXField.setText(" ");
-		enterExpressionField.setText(" ");
-		errorMessagesField.setText( " ");
+		valueForXField.setText("");
+		enterExpressionField.setText("");
+		errorMessagesField.setText("");
+		xIncrementField.setText("");
 		
 	}
 
 	private void expressionEntered()
 	{
-		if(isXthere()) //if x is present in the expression
+		if(isXThere()) //if x is present in the expression
 		{
 			if(!valueInTheXField()) //and there is no value in the valueForXField
 			{
@@ -609,7 +703,7 @@ public class ExpressionCalculator implements ActionListener
 					
 			
 		}
-		if(!isXthere()) //if x is not present in the expression 
+		if(!isXThere()) //if x is not present in the expression 
 		{
 			if(valueInTheXField()) //and there is a value in the valueForXField
 			{
@@ -624,14 +718,15 @@ public class ExpressionCalculator implements ActionListener
 		
 	}
 	
-	private void enterHasBeenPressed() //if enter has been pressed 
+	private void enterHasBeenPressed()
 	{
-		expressionEntered(); //check to see if there are "x" errors 
+		expressionEntered(); 
 		String newLine = System.lineSeparator();
 		if(!errorDetected1 && !errorDetected2) {
 			lastMessage = enterExpressionField.getText(); //last thing entered in log area 
 	        logArea.setCaretPosition(logArea.getDocument().getLength()); // scroll to bottom
-	         
+	        //valueForXField.setText(" ");
+			//enterExpressionField.setText(" "); 
 	       
 				
 	        String enteredExpression = enterExpressionField.getText().trim().toLowerCase();
@@ -650,9 +745,9 @@ public class ExpressionCalculator implements ActionListener
 				boolean isError = false;
 				
 				// Call error checking methods!
-				if (checkParenthesesErrors(expression) == 1)
+				if (checkParenthesesErrors(expression, 0) == 1)
 					isError = true;
-				if (checkForOtherErrors(expression) == 1)
+				if (checkForOtherErrors(expression, 0) == 1)
 					isError = true;
 				//System.out.println("To be evaluated = " + expression);
 				
@@ -685,7 +780,7 @@ public class ExpressionCalculator implements ActionListener
 		
 	}
 	
-	private boolean isXthere() //has x been entered in the enterExpressionField
+	private boolean isXThere()
 	{
 		if(enterExpressionField.getText().trim().toLowerCase().contains("x") == true)
 		{
@@ -694,7 +789,7 @@ public class ExpressionCalculator implements ActionListener
 			return false; 		
 	}
 	
-	private boolean valueInTheXField() //Is there a value in the valueForXField? 
+	private boolean valueInTheXField()
 	{
 		if(valueForXField.getText().trim().length() == 0)
 		{
