@@ -1,4 +1,3 @@
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -19,8 +18,7 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 
 
-public class GraphingCalculator implements ActionListener 
-{	
+public class GraphingCalculator implements ActionListener, Runnable {	
 	//GUI objects
 	
 	private JFrame calculatorWindow         = new JFrame("Graphing Calculator"); 
@@ -668,9 +666,21 @@ public class GraphingCalculator implements ActionListener
 	   	 drawPlot(expression, x, y);
 	   	 return;
 	}
-
+	
+	double[] X;
+	double[] Y;
+	
 	private void drawPlot(String expression, double[] x, double[] y) {
-		JFrame graphWindow = new JFrame("Plot of the Expression: " + expression);
+		X = x;
+		Y = y;
+	    Thread t = new Thread(this); // create a Thread  
+        t.start();
+	}
+	
+	public void run() {
+		System.out.println("HI");
+		
+		JFrame graphWindow = new JFrame("Plot of the Expression: " );
 		JPanel plotPanel  = new JPanel();
 		Graphics g;
 		
@@ -679,17 +689,28 @@ public class GraphingCalculator implements ActionListener
 		graphWindow.setVisible(true); // show it!
 		
 		plotPanel.setBackground(Color.white);
-		
-		g = plotPanel.getGraphics();
-		g.setColor(Color.black);
-		g.setFont(new Font("default", Font.BOLD, 50));
-		g.drawString("Hey!" ,100,100);
-	    g.fillRect(100, 100, 50, 50);//x,y,width,height  
-		
-	    System.out.println("\nplotPanel width =  " + plotPanel.getWidth());
+		System.out.println("\nplotPanel width =  " + plotPanel.getWidth());
 	    System.out.println("\nplotPanel height =  " + plotPanel.getHeight());
-	    
+	    g = plotPanel.getGraphics();
+	    g.setFont(new Font("default", Font.BOLD, 15));
+		while (true) {
+			int xMid = plotPanel.getWidth()/2;
+			int yMid = plotPanel.getHeight()/2;
+			int xMax = plotPanel.getWidth();
+			int yMax = plotPanel.getHeight();
+			
+			for(int i = 0;i<11;i++) {
+				g.fillRect((int)X[i], yMax-(int)Y[i], 2, 2);
+			}
+			g.setColor(Color.black);
+			g.drawString("y-axis",xMid +10,15);
+			g.drawString("x-axis",0,yMid);
+			g.drawLine(0, yMid,  plotPanel.getWidth(),yMid);
+		    g.fillRect(0, yMid, plotPanel.getWidth(), 5);//x,y,width,height  
+		    g.fillRect(xMid, 0,5, plotPanel.getWidth());//x,y,width,height  
+		}	
 	}
+
 	
 	private void recallLast() 
 	{
@@ -813,5 +834,4 @@ public class GraphingCalculator implements ActionListener
 		}
 		return true; 
 	}
-
 }
